@@ -6,7 +6,7 @@ jinja2
 timezonefinder
 tzdata
 
-# Джйотиш: pyswisseph. На Windows нет готового wheel для этой версии Python,
-# нужен компилятор (Microsoft C++ Build Tools), поэтому не установлен по
-# умолчанию. Раскомментируйте после установки Build Tools:
-# pyswisseph
+# Джйотиш: pyswisseph. На Render (Linux) ставится обычным образом — компилятор
+# там уже есть в образе сборки. На Windows у пакета нет готового wheel под эту
+# версию Python — локально ставится только после Microsoft C++ Build Tools.
+pyswisseph
