@@ -87,6 +87,7 @@ forms.bazi.addEventListener("submit", async (e) => {
     date: fd.get("date"),
     time: fd.get("time") || null,
     gender: fd.get("gender") || "f",
+    city: fd.get("city") || null,
     lon: fd.get("lon") ? Number(fd.get("lon")) : null,
     utc_offset: fd.get("utc_offset") ? Number(fd.get("utc_offset")) : null,
   };
@@ -96,6 +97,7 @@ forms.bazi.addEventListener("submit", async (e) => {
     await callApi("/api/bazi", payload);
     const params = new URLSearchParams({ date: payload.date, gender: payload.gender });
     if (payload.time) params.set("time", payload.time);
+    if (payload.city) params.set("city", payload.city);
     if (payload.lon !== null) params.set("lon", payload.lon);
     if (payload.utc_offset !== null) params.set("utc_offset", payload.utc_offset);
     goToResult(`/api/bazi/html?${params.toString()}`);
@@ -112,18 +114,21 @@ forms.jyotish.addEventListener("submit", async (e) => {
   const payload = {
     date: fd.get("date"),
     time: fd.get("time") || null,
+    city: fd.get("city") || null,
     lat: fd.get("lat") ? Number(fd.get("lat")) : null,
     lon: fd.get("lon") ? Number(fd.get("lon")) : null,
-    utc_offset: Number(fd.get("utc_offset")),
+    utc_offset: fd.get("utc_offset") ? Number(fd.get("utc_offset")) : null,
   };
   const btn = forms.jyotish.querySelector("button");
   btn.disabled = true;
   try {
     await callApi("/api/jyotish", payload);
-    const params = new URLSearchParams({ date: payload.date, utc_offset: payload.utc_offset });
+    const params = new URLSearchParams({ date: payload.date });
     if (payload.time) params.set("time", payload.time);
+    if (payload.city) params.set("city", payload.city);
     if (payload.lat !== null) params.set("lat", payload.lat);
     if (payload.lon !== null) params.set("lon", payload.lon);
+    if (payload.utc_offset !== null) params.set("utc_offset", payload.utc_offset);
     goToResult(`/api/jyotish/html?${params.toString()}`);
   } catch (err) {
     showError(err.message);

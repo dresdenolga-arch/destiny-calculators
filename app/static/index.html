@@ -59,17 +59,24 @@
           <option value="m">Мужской</option>
         </select>
       </div>
-      <div class="row">
-        <div class="field">
-          <label>Долгота места рождения (в.д., необязательно)</label>
-          <input type="number" step="0.01" name="lon" placeholder="напр. 37.62">
-        </div>
-        <div class="field">
-          <label>Смещение от UTC на момент рождения</label>
-          <input type="number" step="0.5" name="utc_offset" placeholder="напр. 3">
-        </div>
+      <div class="field">
+        <label>Город рождения (необязательно)</label>
+        <input type="text" name="city" placeholder="напр. Москва">
       </div>
-      <p class="hint">Долгота и смещение UTC нужны только для перевода времени в солнечное — без них час рождения не переведётся точно.</p>
+      <p class="hint">По городу сам определю координаты и часовой пояс на момент рождения (с учётом декретного/летнего времени той эпохи) — нужен, только если указано время рождения.</p>
+      <details class="advanced">
+        <summary>Указать координаты вручную вместо города</summary>
+        <div class="row">
+          <div class="field">
+            <label>Долгота места рождения (в.д.)</label>
+            <input type="number" step="0.01" name="lon" placeholder="напр. 37.62">
+          </div>
+          <div class="field">
+            <label>Смещение от UTC на момент рождения</label>
+            <input type="number" step="0.5" name="utc_offset" placeholder="напр. 3">
+          </div>
+        </div>
+      </details>
       <button class="submit" type="submit">Рассчитать</button>
     </form>
 
@@ -84,21 +91,28 @@
           <input type="time" name="time">
         </div>
       </div>
-      <div class="row">
-        <div class="field">
-          <label>Широта места (необязательно)</label>
-          <input type="number" step="0.01" name="lat" placeholder="напр. 55.75">
-        </div>
-        <div class="field">
-          <label>Долгота места (необязательно)</label>
-          <input type="number" step="0.01" name="lon" placeholder="напр. 37.62">
-        </div>
-      </div>
       <div class="field">
-        <label>Смещение от UTC на момент рождения (обязательно)</label>
-        <input type="number" step="0.5" name="utc_offset" required placeholder="напр. 3">
+        <label>Город рождения (необязательно)</label>
+        <input type="text" name="city" placeholder="напр. Дели">
       </div>
-      <p class="hint">Без широты/долготы и времени рассчитаются только положения планет и даши — без лагны и домов.</p>
+      <p class="hint">По городу сам определю широту, долготу и часовой пояс на момент рождения. Без времени рассчитаются только положения планет и даши — без лагны и домов.</p>
+      <details class="advanced">
+        <summary>Указать координаты вручную вместо города</summary>
+        <div class="row">
+          <div class="field">
+            <label>Широта места</label>
+            <input type="number" step="0.01" name="lat" placeholder="напр. 55.75">
+          </div>
+          <div class="field">
+            <label>Долгота места</label>
+            <input type="number" step="0.01" name="lon" placeholder="напр. 37.62">
+          </div>
+        </div>
+        <div class="field">
+          <label>Смещение от UTC на момент рождения</label>
+          <input type="number" step="0.5" name="utc_offset" placeholder="напр. 3">
+        </div>
+      </details>
       <button class="submit" type="submit">Рассчитать</button>
     </form>
   </div>

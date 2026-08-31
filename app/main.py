@@ -27,6 +27,7 @@ class BaziRequest(BaseModel):
     date: str  # YYYY-MM-DD
     time: Optional[str] = None  # HH:MM
     gender: str = "f"
+    city: Optional[str] = None
     lon: Optional[float] = None
     utc_offset: Optional[float] = None
 
@@ -34,9 +35,10 @@ class BaziRequest(BaseModel):
 class JyotishRequest(BaseModel):
     date: str  # YYYY-MM-DD
     time: Optional[str] = None  # HH:MM
+    city: Optional[str] = None
     lat: Optional[float] = None
     lon: Optional[float] = None
-    utc_offset: float
+    utc_offset: Optional[float] = None
 
 
 @app.post("/api/matrix")
@@ -65,7 +67,7 @@ def api_bazi(req: BaziRequest):
     try:
         return bazi_service.compute(
             req.date, time=req.time, gender=req.gender,
-            lon=req.lon, utc_offset=req.utc_offset,
+            lon=req.lon, utc_offset=req.utc_offset, city=req.city,
         )
     except RuntimeError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
@@ -73,10 +75,11 @@ def api_bazi(req: BaziRequest):
 
 @app.get("/api/bazi/html", response_class=HTMLResponse)
 def api_bazi_html(date: str, name: str = "", time: Optional[str] = None,
-                   gender: str = "f", lon: Optional[float] = None,
-                   utc_offset: Optional[float] = None):
+                   gender: str = "f", city: Optional[str] = None,
+                   lon: Optional[float] = None, utc_offset: Optional[float] = None):
     try:
-        data = bazi_service.compute(date, time=time, gender=gender, lon=lon, utc_offset=utc_offset)
+        data = bazi_service.compute(date, time=time, gender=gender, lon=lon,
+                                     utc_offset=utc_offset, city=city)
         return bazi_render.build_page(data, person=name)
     except RuntimeError as exc:
         return HTMLResponse(error_page(str(exc)), status_code=400)
@@ -87,18 +90,19 @@ def api_jyotish(req: JyotishRequest):
     try:
         return jyotish_service.compute(
             req.date, utc_offset=req.utc_offset, time=req.time,
-            lat=req.lat, lon=req.lon,
+            lat=req.lat, lon=req.lon, city=req.city,
         )
     except RuntimeError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
 
 @app.get("/api/jyotish/html", response_class=HTMLResponse)
-def api_jyotish_html(date: str, utc_offset: float, name: str = "",
-                      time: Optional[str] = None, lat: Optional[float] = None,
-                      lon: Optional[float] = None):
+def api_jyotish_html(date: str, name: str = "", time: Optional[str] = None,
+                      city: Optional[str] = None, lat: Optional[float] = None,
+                      lon: Optional[float] = None, utc_offset: Optional[float] = None):
     try:
-        data = jyotish_service.compute(date, utc_offset=utc_offset, time=time, lat=lat, lon=lon)
+        data = jyotish_service.compute(date, utc_offset=utc_offset, time=time,
+                                        lat=lat, lon=lon, city=city)
         return jyotish_render.build_page(data, person=name)
     except RuntimeError as exc:
         return HTMLResponse(error_page(str(exc)), status_code=400)
