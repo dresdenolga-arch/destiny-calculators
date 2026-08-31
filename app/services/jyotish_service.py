@@ -35,4 +35,7 @@ def compute(date: str, utc_offset: float, time: str | None = None,
         )
     if not proc.stdout.strip():
         raise RuntimeError(proc.stderr.strip() or "Пустой ответ от jyotish_calc.py")
-    return json.loads(proc.stdout)
+    data = json.loads(proc.stdout)
+    if "ошибка" in data:
+        raise RuntimeError(data["ошибка"])
+    return data

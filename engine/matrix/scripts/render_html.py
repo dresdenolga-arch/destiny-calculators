@@ -19,7 +19,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from calculate import calculate, parse_date, require_guide, CHILD_NOTE  # noqa: E402
+from calculate import (  # noqa: E402
+    calculate, parse_date, require_guide, CHILD_NOTE,
+    meaning, COMPATIBILITY_NOTE,
+)
 
 CENTER = 280.0
 RING = 190.0          # радиус основных точек и возрастных отметок
@@ -77,6 +80,17 @@ td { padding: 7px 6px; border-top: 1px solid var(--line); vertical-align: middle
 .badge { max-width: 100%; white-space: normal; }
 footer { color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 26px;
          border-top: 1px solid var(--line); padding-top: 14px; }
+.print-bar { position: sticky; top: 0; z-index: 5; display: flex; justify-content: flex-end;
+             padding: 16px 0 8px; background: var(--bg); }
+.print-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px;
+             padding: 10px 16px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.print-btn:hover { opacity: .9; }
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff !important; padding: 0 12px 12px; }
+  .card { break-inside: avoid; }
+  a { color: inherit; text-decoration: none; }
+}
 """
 
 
@@ -358,6 +372,8 @@ def build_page(matrix: dict, person: str, child: bool) -> str:
         f'<meta name="viewport" content="width=device-width, initial-scale=1">'
         f'<title>Матрица судьбы · {html.escape(matrix["input_date"])}</title>'
         f'<style>{CSS}</style></head><body><div class="wrap">'
+        f'<div class="print-bar no-print">'
+        f'<button class="print-btn" onclick="window.print()">Скачать PDF</button></div>'
         f'<h1>{heading}</h1><div class="sub">{html.escape(subtitle)}</div>'
         f'<div class="cols">'
         f'<div class="card"><h2>Схема матрицы</h2>{build_svg(matrix)}</div>'
@@ -369,6 +385,93 @@ def build_page(matrix: dict, person: str, child: bool) -> str:
         f'{build_purposes(matrix)}</div>'
         f'<div class="card" style="margin-top:24px"><h2>Дополнительные модули</h2>'
         f'{build_modules(matrix)}</div>'
+        f'<footer>{html.escape(footer)}</footer>'
+        f'</div></body></html>'
+    )
+
+
+def build_compat_page(person1: dict, person2: dict, name1: str, name2: str,
+                      comparison: dict, child: bool) -> str:
+    """Совместимость: сначала сравнение, полные матрицы — свёрнуты ниже."""
+    heading1 = html.escape(name1) if name1 else person1["input_date"]
+    heading2 = html.escape(name2) if name2 else person2["input_date"]
+
+    def e_card(label: str, heading: str, matrix: dict) -> str:
+        e = matrix["personal_square"]["E"]
+        return (
+            f'<div class="pill"><h3>{label} — {html.escape(heading)}</h3>'
+            f'<div class="big">{e["number"]} {html.escape(e["arcanum"])}</div>'
+            f'<div class="chakra-about">{html.escape(meaning(e["number"], "отношения") or e["минус"])}</div>'
+            f'</div>'
+        )
+
+    same = comparison["same_number_in_same_point"]
+    if same:
+        same_html = "<table><tr><th>Точка</th><th>Число</th><th>Аркан</th><th>За что отвечает</th></tr>" + "".join(
+            f'<tr><td><b>{html.escape(key)}</b></td><td>{value["number"]}</td>'
+            f'<td>{html.escape(value["arcanum"])}</td><td>{html.escape(value["role"])}</td></tr>'
+            for key, value in same.items()
+        ) + "</table>"
+    else:
+        same_html = '<p class="muted">Ни в одной точке число не совпало один в один — совместимость тут не про «идентичность», а про то, как разные энергии взаимодействуют.</p>'
+
+    shared = comparison["arcana_present_in_both_matrices"]
+    shared_html = "".join(
+        f'<span class="tag hit">{item["number"]} {html.escape(item["arcanum"])}</span>'
+        for item in shared
+    ) or '<span class="muted">общих арканов нет</span>'
+
+    gh1, gh2 = comparison["relationship_points_G_H"]["person_1"], comparison["relationship_points_G_H"]["person_2"]
+
+    def gh_cell(point: dict) -> str:
+        return f'{point["number"]} {html.escape(point["arcanum"])}'
+
+    gh_html = (
+        '<table><tr><th></th><th>G</th><th>H</th></tr>'
+        f'<tr><td>{heading1}</td><td>{gh_cell(gh1["G"])}</td><td>{gh_cell(gh1["H"])}</td></tr>'
+        f'<tr><td>{heading2}</td><td>{gh_cell(gh2["G"])}</td><td>{gh_cell(gh2["H"])}</td></tr></table>'
+    )
+
+    footer = (
+        "Матрица судьбы — эзотерический инструмент для саморефлексии, а не наука, "
+        "не медицина и не финансовая консультация. Совместимость здесь описывает "
+        "темы контакта, а не вердикт «подходите / не подходите» — это решают люди, "
+        "а не арканы."
+    )
+    if child:
+        footer = CHILD_NOTE + " " + footer
+
+    def full_section(heading: str, matrix: dict) -> str:
+        return (
+            f'<details class="collapsible"><summary>Полная матрица — {html.escape(heading)}</summary>'
+            f'<div class="cols">'
+            f'<div class="card"><h2>Схема матрицы</h2>{build_svg(matrix)}</div>'
+            f'<div class="card"><h2>Карта здоровья</h2>{build_table(matrix)}</div>'
+            f'</div>'
+            f'<div class="card"><h2>Этапы жизни</h2>{build_stages(matrix)}</div>'
+            f'<div class="card"><h2>Предназначения</h2>{build_purposes(matrix)}</div>'
+            f'<div class="card"><h2>Дополнительные модули</h2>{build_modules(matrix)}</div>'
+            f'</details>'
+        )
+
+    return (
+        f'<!doctype html><html lang="ru"><head><meta charset="utf-8">'
+        f'<meta name="viewport" content="width=device-width, initial-scale=1">'
+        f'<title>Совместимость · {html.escape(person1["input_date"])} и {html.escape(person2["input_date"])}</title>'
+        f'<style>{CSS}</style></head><body><div class="wrap">'
+        f'<div class="print-bar no-print">'
+        f'<button class="print-btn" onclick="window.print()">Скачать PDF</button></div>'
+        f'<h1>Совместимость</h1>'
+        f'<div class="sub">{heading1} ({html.escape(person1["input_date"])}) '
+        f'и {heading2} ({html.escape(person2["input_date"])})</div>'
+        f'<div class="card"><h2>Что каждый несёт в контакт</h2>'
+        f'<div class="grid">{e_card("Точка E", heading1, person1)}{e_card("Точка E", heading2, person2)}</div>'
+        f'<p class="note">{html.escape(COMPATIBILITY_NOTE)}</p></div>'
+        f'<div class="card"><h2>Где числа совпали</h2>{same_html}</div>'
+        f'<div class="card"><h2>Общие арканы у обоих</h2><div>{shared_html}</div></div>'
+        f'<div class="card"><h2>Родовые программы про близость (G / H)</h2>{gh_html}</div>'
+        f'{full_section(heading1, person1)}'
+        f'{full_section(heading2, person2)}'
         f'<footer>{html.escape(footer)}</footer>'
         f'</div></body></html>'
     )

@@ -22,4 +22,7 @@ def compute(date: str, time: str | None = None, gender: str = "f",
     proc = subprocess.run(args, capture_output=True, text=True, encoding="utf-8", env=_ENV)
     if not proc.stdout.strip():
         raise RuntimeError(proc.stderr.strip() or "Пустой ответ от bazi_calc.py")
-    return json.loads(proc.stdout)
+    data = json.loads(proc.stdout)
+    if "ошибка" in data:
+        raise RuntimeError(data["ошибка"])
+    return data

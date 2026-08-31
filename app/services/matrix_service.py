@@ -41,3 +41,13 @@ def render_html_page(date: str, name: str = "", child: bool = False) -> str:
     day, month, year = _calc.parse_date(date)
     matrix = _calc.calculate(day, month, year, child=child)
     return _render.build_page(matrix, name, child)
+
+
+def render_compatibility_html_page(date: str, partner_date: str, name1: str = "",
+                                    name2: str = "", child: bool = False) -> str:
+    day, month, year = _calc.parse_date(date)
+    p_day, p_month, p_year = _calc.parse_date(partner_date)
+    person1 = _calc.calculate(day, month, year, child=child)
+    person2 = _calc.calculate(p_day, p_month, p_year, child=child)
+    comparison = _calc.compare(person1, person2)
+    return _render.build_compat_page(person1, person2, name1, name2, comparison, child)

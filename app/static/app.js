@@ -23,44 +23,10 @@ function isoToDDMMYYYY(iso) {
   return `${d}.${m}.${y}`;
 }
 
-function renderValue(value) {
-  if (value === null || value === undefined || value === "") {
-    return `<span class="v">—</span>`;
-  }
-  if (Array.isArray(value)) {
-    if (value.length === 0) return `<span class="v">—</span>`;
-    if (value.every((v) => typeof v !== "object")) {
-      return `<span class="v">${value.map(escapeHtml).join(", ")}</span>`;
-    }
-    return `<div class="nested">${value.map((v) => renderNode(null, v)).join("")}</div>`;
-  }
-  if (typeof value === "object") {
-    return `<div class="nested">${Object.entries(value)
-      .map(([k, v]) => renderNode(k, v))
-      .join("")}</div>`;
-  }
-  return `<span class="v">${escapeHtml(String(value))}</span>`;
-}
-
-function renderNode(key, value) {
-  if (value && typeof value === "object") {
-    return `<div class="kv">${key ? `<div class="k">${escapeHtml(key)}</div>` : ""}${renderValue(value)}</div>`;
-  }
-  return `<div class="kv"><div class="k">${escapeHtml(key ?? "")}</div>${renderValue(value)}</div>`;
-}
-
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (c) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[c]));
-}
-
-function renderTopLevel(data) {
-  return Object.entries(data)
-    .map(([key, value]) => {
-      return `<details class="section" open><summary>${escapeHtml(key)}</summary>${renderValue(value)}</details>`;
-    })
-    .join("");
 }
 
 async function callApi(url, body) {
@@ -81,10 +47,12 @@ function showError(message) {
   resultEl.classList.add("visible");
 }
 
-function showResult(html, extraActions = "") {
-  resultEl.innerHTML = `${extraActions ? `<div class="result-actions">${extraActions}</div>` : ""}${html}`;
-  resultEl.classList.add("visible");
-  resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
+// Переходит на готовую HTML-страницу с разбором в этой же вкладке.
+// Не используем window.open() после await: браузеры блокируют такие попапы,
+// потому что к моменту ответа сервера жест пользователя уже "остыл".
+// Прямой переход (location.href) под это ограничение не подпадает.
+function goToResult(url) {
+  window.location.href = url;
 }
 
 forms.matrix.addEventListener("submit", async (e) => {
@@ -101,12 +69,10 @@ forms.matrix.addEventListener("submit", async (e) => {
   const btn = forms.matrix.querySelector("button");
   btn.disabled = true;
   try {
-    const data = await callApi("/api/matrix", { date, child, partner_date });
-    const htmlUrl = `/api/matrix/html?date=${encodeURIComponent(date)}&name=${encodeURIComponent(name)}&child=${child}`;
-    showResult(
-      renderTopLevel(data),
-      `<a class="link-btn" href="${htmlUrl}" target="_blank" rel="noopener">Открыть полную схему (HTML)</a>`
-    );
+    await callApi("/api/matrix", { date, child, partner_date });
+    const params = new URLSearchParams({ date, name, child });
+    if (partner_date) params.set("partner_date", partner_date);
+    goToResult(`/api/matrix/html?${params.toString()}`);
   } catch (err) {
     showError(err.message);
   } finally {
@@ -127,8 +93,12 @@ forms.bazi.addEventListener("submit", async (e) => {
   const btn = forms.bazi.querySelector("button");
   btn.disabled = true;
   try {
-    const data = await callApi("/api/bazi", payload);
-    showResult(renderTopLevel(data));
+    await callApi("/api/bazi", payload);
+    const params = new URLSearchParams({ date: payload.date, gender: payload.gender });
+    if (payload.time) params.set("time", payload.time);
+    if (payload.lon !== null) params.set("lon", payload.lon);
+    if (payload.utc_offset !== null) params.set("utc_offset", payload.utc_offset);
+    goToResult(`/api/bazi/html?${params.toString()}`);
   } catch (err) {
     showError(err.message);
   } finally {
@@ -149,8 +119,12 @@ forms.jyotish.addEventListener("submit", async (e) => {
   const btn = forms.jyotish.querySelector("button");
   btn.disabled = true;
   try {
-    const data = await callApi("/api/jyotish", payload);
-    showResult(renderTopLevel(data));
+    await callApi("/api/jyotish", payload);
+    const params = new URLSearchParams({ date: payload.date, utc_offset: payload.utc_offset });
+    if (payload.time) params.set("time", payload.time);
+    if (payload.lat !== null) params.set("lat", payload.lat);
+    if (payload.lon !== null) params.set("lon", payload.lon);
+    goToResult(`/api/jyotish/html?${params.toString()}`);
   } catch (err) {
     showError(err.message);
   } finally {
