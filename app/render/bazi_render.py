@@ -16,7 +16,26 @@ EXTRA_CSS = """
 .elements .el { flex: 1 1 90px; text-align: center; border: 1px solid var(--line);
                 border-radius: 10px; padding: 10px 4px; }
 .elements .el .n { font-size: 20px; font-weight: 650; color: var(--accent); }
+.boundary-warning { border: 1px solid #d9a441; border-radius: 12px; padding: 14px; margin-top: 14px; }
+.boundary-warning h3 { margin: 0 0 6px; font-size: 13px; }
 """
+
+
+def _alt_hour_html(original: dict, alt: dict) -> str:
+    hidden = ", ".join(alt.get("скрытые_стволы", [])) or "—"
+    return (
+        '<div class="boundary-warning">'
+        '<h3>Время рождения — пограничное для столпа часа</h3>'
+        '<p class="muted">Момент рождения оказался близко (в пределах 20 минут) к границе, '
+        'где двухчасовой интервал меняется на следующий. Если время рождения известно неточно '
+        '(округлено, «около», по памяти) — реальный столп часа мог получиться другим. '
+        f'Основной вариант выше — {esc(original.get("иероглифы", ""))}. Второй вариант — если бы '
+        'момент рождения был на 20–45 минут раньше или позже:</p>'
+        f'<p><b>{esc(alt["иероглифы"])}</b> — {esc(alt["небесный_ствол"])}, '
+        f'{esc(alt["земная_ветвь"])} ({esc(alt["животное"])}). '
+        f'Скрытые стволы: {esc(hidden)}.</p>'
+        '</div>'
+    )
 
 
 def _pillar_html(name: str, data: dict, is_day: bool) -> str:
@@ -78,6 +97,10 @@ def build_page(data: dict, person: str = "") -> str:
         _pillar_html(name, data["четыре_столпа"][name], name == "день")
         for name in PILLAR_ORDER if name in data["четыре_столпа"]
     ) + "</div>"
+
+    alt_pillar = data.get("альтернативный_столп_часа")
+    if alt_pillar:
+        pillars_html += _alt_hour_html(data["четыре_столпа"].get("час", {}), alt_pillar)
 
     elements = data["баланс_стихий"]
     elements_html = '<div class="elements">' + "".join(
