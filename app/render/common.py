@@ -42,6 +42,8 @@ td { padding: 7px 6px; border-top: 1px solid var(--line); vertical-align: top; }
 .pill h3 { margin: 0 0 6px; font-size: 13px; font-weight: 650; }
 .muted { color: var(--muted); }
 .note { color: var(--muted); font-size: 12px; line-height: 1.55; margin-top: 14px; }
+.intro { font-size: 13px; line-height: 1.6; margin: 0 0 12px; }
+.intro:last-child { margin-bottom: 0; }
 footer { color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 26px;
          border-top: 1px solid var(--line); padding-top: 14px; }
 details.collapsible { margin-top: 24px; }

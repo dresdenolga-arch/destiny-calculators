@@ -1,5 +1,8 @@
 """Builds a printable HTML page from bazi_service.compute()'s JSON."""
 from app.render.common import esc, page_style, print_bar_html
+from app.render.bazi_interpretations import (
+    animal_year_text, day_master_text, element_balance_synthesis,
+)
 
 PILLAR_ORDER = ["год", "месяц", "день", "час"]
 PILLAR_TITLES = {"год": "Год", "месяц": "Месяц", "день": "День", "час": "Час"}
@@ -121,6 +124,9 @@ def build_page(data: dict, person: str = "") -> str:
     )
 
     day_master = data["хозяин_дня"]
+    day_master_applied = day_master_text(day_master["ствол"])
+    animal_applied = animal_year_text(data.get("животное_года", ""))
+    elements_applied = element_balance_synthesis(elements)
     note_html = f'<p class="note">{esc(data["примечание"])}</p>' if data.get("примечание") else ""
 
     footer = (
@@ -139,10 +145,15 @@ def build_page(data: dict, person: str = "") -> str:
         f'<div class="card"><h2>Хозяин дня</h2>'
         f'<div class="big">{esc(day_master["ствол"])}</div>'
         f'<p class="muted">{esc(day_master["стихия"])}, {esc(day_master["инь_ян"])} — '
-        f'лунная дата {esc(data.get("дата_лунная", ""))}</p></div>'
+        f'лунная дата {esc(data.get("дата_лунная", ""))}</p>'
+        f'<p class="intro"><b>Хозяин дня — это вы, суть личности, а не социальная маска.</b> '
+        f'{esc(day_master_applied)}</p>'
+        f'<p class="note">Животное года ({esc(data.get("животное_года", ""))}) — это другое: '
+        f'{esc(animal_applied)}</p></div>'
         f'<div class="card"><h2>Четыре столпа</h2>{pillars_html}</div>'
         f'<div class="cols">'
-        f'<div class="card"><h2>Баланс стихий</h2>{elements_html}</div>'
+        f'<div class="card"><h2>Баланс стихий</h2>{elements_html}'
+        f'<p class="intro">{esc(elements_applied)}</p></div>'
         f'<div class="card"><h2>На-инь</h2>{nayin_html}</div>'
         f'</div>'
         f'<div class="card"><h2>Такты удачи (да юнь)</h2>{_dayun_html(data.get("такты_удачи_да_юнь", []))}</div>'

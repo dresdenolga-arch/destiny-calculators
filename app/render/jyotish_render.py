@@ -6,6 +6,7 @@
 что это по-человечески → как читать конкретно эти цифры.
 """
 from app.render.common import esc, page_style, print_bar_html
+from app.render.jyotish_interpretations import dasha_planet_text, lagna_text_from_sanskrit
 
 PLANET_ORDER = ["Солнце", "Луна", "Марс", "Меркурий", "Юпитер", "Венера", "Сатурн", "Раху", "Кету"]
 
@@ -33,8 +34,6 @@ HOUSE_MEANING = {
 EXTRA_CSS = """
 .planets td.retro { color: #c0392b; font-weight: 650; }
 .dasha-current { border: 1px solid var(--accent); border-radius: 12px; padding: 14px; margin-top: 12px; }
-.intro { font-size: 13px; line-height: 1.6; margin: 0 0 12px; }
-.intro:last-child { margin-bottom: 0; }
 dl.glossary { margin: 0; }
 dl.glossary dt { font-weight: 650; margin-top: 10px; }
 dl.glossary dt:first-child { margin-top: 0; }
@@ -95,11 +94,12 @@ def _vimshottari_html(vim: dict) -> str:
     current = vim.get("текущая", {})
     current_html = ""
     if current.get("маха_даша"):
-        theme = PLANET_MEANING.get(current["маха_даша"], "")
+        theme = dasha_planet_text(current["маха_даша"])
         antar = f' → антар-даша {esc(current["антар_даша"])} (до {esc(current["антар_до"])})' if current.get("антар_даша") else ""
         current_html = (
             f'<div class="dasha-current"><b>Сейчас идёт:</b> маха-даша {esc(current["маха_даша"])} '
-            f'— тема периода: {esc(theme)} (до {esc(current["до"])}){antar}</div>'
+            f'(до {esc(current["до"])}){antar}'
+            f'<p class="intro" style="margin-top:8px">{esc(theme)}</p></div>'
         )
     rows = "".join(
         f'<tr><td>{esc(p["планета"])}</td><td class="muted">{esc(PLANET_MEANING.get(p["планета"], ""))}</td>'
@@ -119,13 +119,14 @@ def build_page(data: dict, person: str = "") -> str:
     lagna_html = ""
     if has_houses:
         lagna = data["лагна"]
+        applied = lagna_text_from_sanskrit(lagna["знак_санскрит"])
+        applied_html = f'<p class="intro">{esc(applied)}</p>' if applied else ""
         lagna_html = (
             f'<div class="card"><h2>Лагна</h2>'
             f'<div class="big">{esc(lagna["положение"])}</div>'
-            f'<p class="intro">Лагна — знак, который восходил на востоке в момент рождения: '
-            'скелет всей карты, то, с чем человек идёт по жизни и как выглядит для мира.</p>'
             f'<p class="muted">Накшатра: {esc(lagna["накшатра"])} · '
-            f'навамша-лагна: {esc(lagna["навамша_лагна_D9"])}</p></div>'
+            f'навамша-лагна: {esc(lagna["навамша_лагна_D9"])}</p>'
+            f'{applied_html}</div>'
         )
     elif data.get("примечание_лагна"):
         lagna_html = (
