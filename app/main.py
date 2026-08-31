@@ -6,9 +6,11 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from app.auth import BasicAuthMiddleware
 from app.services import bazi_service, jyotish_service, matrix_service
 
 app = FastAPI(title="Даты рождения — три системы")
+app.add_middleware(BasicAuthMiddleware)
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 

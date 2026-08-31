@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: destiny-calculators
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SITE_USER
+        sync: false
+      - key: SITE_PASSWORD
+        sync: false
