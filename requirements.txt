@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic
+lunar_python
+jinja2
+
+# Джйотиш: pyswisseph. На Windows нет готового wheel для этой версии Python,
+# нужен компилятор (Microsoft C++ Build Tools), поэтому не установлен по
+# умолчанию. Раскомментируйте после установки Build Tools:
+# pyswisseph
